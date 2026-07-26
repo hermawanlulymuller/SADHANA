@@ -1,0 +1,68 @@
+# Panduan: Menghubungkan Sadhana ke Google Sheet & AppSheet
+
+Arsitektur singkat:
+
+```
+[Aplikasi Sadhana (web)]  --POST-->  [Google Apps Script Web App]  -->  [Google Sheet]  <--  [AppSheet (app mobile)]
+```
+
+Google Sheet menjadi "database" tunggal. Aplikasi web ini menulis data ke sana lewat
+skrip jembatan (Apps Script). AppSheet membaca Sheet yang sama untuk memberimu
+versi aplikasi mobile native, lengkap dengan notifikasi.
+
+## Langkah 1 — Siapkan Google Sheet
+
+1. Buka [sheets.google.com](https://sheets.google.com) → buat spreadsheet baru, beri nama misalnya **Sadhana Data**.
+2. Buat 3 tab dengan nama **persis** seperti ini (huruf besar/kecil berpengaruh):
+   - `Jadwal`
+   - `PolaMakan`
+   - `Aktivitas`
+3. Kamu tidak perlu mengisi header manual — skrip di langkah 2 akan membuatnya otomatis saat data pertama masuk.
+
+## Langkah 2 — Pasang skrip jembatan (Apps Script)
+
+1. Di Google Sheet: **Extensions → Apps Script**.
+2. Hapus isi default di editor, tempel seluruh isi file `google-apps-script.gs` (disertakan).
+3. Simpan (Ctrl+S / Cmd+S), beri nama project misalnya "Sadhana Bridge".
+4. Klik **Deploy → New deployment**.
+   - Pilih tipe: **Web app**
+   - Description: bebas
+   - Execute as: **Me**
+   - Who has access: **Anyone**
+5. Klik **Deploy**. Google akan minta otorisasi — izinkan (ini skripmu sendiri, aman).
+6. Salin URL yang muncul, formatnya seperti:
+   `https://script.google.com/macros/s/AKfycb.../exec`
+
+## Langkah 3 — Hubungkan ke aplikasi Sadhana
+
+1. Buka aplikasi Sadhana, masuk ke tab **Sinkron**.
+2. Tempel URL dari langkah 2 ke kolom "URL Web App Google Apps Script".
+3. Klik **Sinkron semua data sekarang** — ini akan mengirim seluruh jadwal, menu, dan
+   log yang sudah kamu buat ke Google Sheet.
+4. Selanjutnya, setiap kali kamu menambah jadwal / menu / log baru di aplikasi,
+   data otomatis terkirim juga ke Sheet.
+
+> Catatan: sinkronisasi ini satu arah (aplikasi → Sheet). Jika kamu mengedit data
+> langsung di Google Sheet atau lewat AppSheet, perubahan itu tidak otomatis
+> kembali ke aplikasi web. Untuk kebutuhan dua arah penuh, Sheet bisa dijadikan
+> sumber data utama dan aplikasi web tinggal jadi tampilan tambahan — beri tahu
+> saya kalau kamu ingin versi itu.
+
+## Langkah 4 — Buat aplikasi mobile dengan AppSheet
+
+1. Buka [appsheet.com](https://www.appsheet.com) → **Create → App → Start with your own data**.
+2. Pilih **Google Sheets**, lalu pilih spreadsheet **Sadhana Data** yang sudah dibuat.
+3. AppSheet otomatis mendeteksi 3 tab (`Jadwal`, `PolaMakan`, `Aktivitas`) sebagai 3 tabel/tampilan.
+4. Di panel **Data**, pastikan tipe kolom sudah sesuai:
+   - `Jadwal`: `time` → Time, `durasi` → Number
+   - `PolaMakan`: `time` → Time
+   - `Aktivitas`: `date` → Date, `durasi` & `energi` → Number
+5. Di panel **UX**, atur:
+   - View untuk `Jadwal` dan `PolaMakan` sebagai **Calendar** atau **Deck** (dikelompokkan per `day`).
+   - View untuk `Aktivitas` sebagai **Table** diurutkan turun berdasarkan `date`.
+6. (Opsional) Aktifkan **Notifications** di AppSheet agar kamu diingatkan sesuai jam di kolom `time`.
+7. Klik **Deploy** di menu kiri untuk mempublikasikan app pribadi ke ponselmu (instal AppSheet app, lalu app custom-mu akan muncul di sana).
+
+Setelah ini kamu punya dua pintu masuk ke data yang sama:
+- **Sadhana (web)** — untuk perencanaan, dashboard visual "busur matahari", dan konsultasi dengan penasehat AI.
+- **AppSheet (mobile)** — untuk pengingat/notifikasi dan pengeditan cepat saat di luar rumah / studio yoga.
